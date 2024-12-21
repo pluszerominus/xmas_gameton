@@ -19,8 +19,13 @@ snakes = None
 snake_1_dict = []
 k = 0
 
-def escape_fence(fences,direction,geometry):
-    all_direction_mass=[[-1,0,0],
+def escape_fence(fences,direction,geometry,min_coord):    
+    for i in range(len(direction)):
+        if direction!=0:
+            index_direction=i
+    new_direction=[0,0,0]
+    second_new_direction=[0,0,0]
+    direction_mass=[[-1,0,0],
                         [1,0,0],
                         [0,-1,0],
                         [0,1,0],
@@ -28,26 +33,45 @@ def escape_fence(fences,direction,geometry):
                         [0,0,1]]
     #Если змея длинее 1 то назад нельзя двигаться 
     if (len(geometry))>1:
-        all_direction_mass.pop(all_direction_mass.index([-x for x in direction]))
-    #Убрать все направления что привидут уходу за границу
-    for direction_mass in all_direction_mass:
-        if any(x + y < 0 for x, y in zip(geometry[0], direction_mass*2)):
-            all_direction_mass.pop(all_direction_mass.index(direction_mass))
-    for fence in fences:
-        dist_pixel_fence = manhattan_distances(fence,[geometry[0]])
-        if 2 in dist_pixel_fence:            
-            #До каких точек мало растояния
-            distance_1 = [i for i, value in enumerate(dist_pixel_fence) if value == 2]            
-            #Убрать все направления сталкновений с объектами
-            for i in range(len(distance_1)):
-                if [x + y for x, y in zip(geometry[0], direction*2)] == fence[distance_1[i]]:
-                    all_direction_mass.pop(all_direction_mass.index(direction))                    
-                    direction=all_direction_mass[0]
-                    all_direction_mass.pop(0)
-            #остановку можно убрать - тогда будут учитываться все преграды, но перебор займет больше времени
-            break                    
-    #Можно возращать весь набор возможных направлений 
-    #return all_direction_mass
+        direction_mass.pop(direction_mass.index([-x for x in direction]))
+    #Убрать ве направления ведущие за карту (на случай мандарина у границы растояние 1)
+    for dir in direction_mass:
+        if any(x + y < 0 for x, y in zip(geometry[0], dir)):
+            direction_mass.pop(direction_mass.index(dir))
+    #Башка будет
+    nex_head=[x + y for x, y in zip(geometry[0], ([x * 1 for x in direction]))]
+    nex_head_2=[x + y for x, y in zip(geometry[0], ([x * 2 for x in direction]))]
+    #Если башка попадет на преграду
+    while (nex_head in fences)or(nex_head_2 in fences):
+        #Убираем направление сталкновения
+        direction_mass.pop(direction_mass.index(direction))
+        #отнимаем координаты башки            
+        ras=[x - y for x, y in zip(min_coord, geometry[0])]        
+        ras_abs = [abs(d) for d in ras]
+        ras_abs[index_direction]=0
+        max_ras = max(ras_abs)
+        for i in range(len(ras_abs)):
+            if ras_abs[i]!=0 and ras_abs[i]!=max_ras:                    
+                second_ras=ras_abs[i]
+        index_max_ras=ras_abs.index(max_ras)
+        index_min_ras=ras_abs.index(second_ras)
+        if ras[index_max_ras]>0:
+            new_direction[index_max_ras]=1
+        else: new_direction[index_max_ras]=-1
+        if ras[index_min_ras]>0:
+            second_new_direction[index_min_ras]=1
+        else: second_new_direction[index_min_ras]=-1        
+        #Поиск в списке доступных
+        if new_direction in direction_mass:
+            direction=new_direction
+        #идем по направлению второй по значимости
+        elif second_new_direction in direction_mass:
+            direction=second_new_direction
+        #Иначе любое из доступных
+        else:
+            direction=direction_mass[0] 
+        nex_head=[x + y for x, y in zip(geometry[0], ([x * 1 for x in direction]))]
+        nex_head_2=[x + y for x, y in zip(geometry[0], ([x * 2 for x in direction]))]              
     return direction
 
 def find_mandarin(foods, snake_coord, snakes_min_dist, special_foods=None):
@@ -114,8 +138,9 @@ while True:
                     min_coord = find_mandarin(food, snake_1_coord[0],min_coord_list, special_food)
                     min_coord_list[index] = min_coord
                 dir = get_direction(min_coord_list[index], snake_1_coord[0])
+                #Обход преград и уход от краев
+                dir = escape_fence(fence_pos,snake_1_dir, snake_1_coord,dir)
                 print(f"For snakes_{index}: food - {min_coord_list[index]}, snake - {snake_1_coord}, dir - {dir}")
-
                 snake_1_dict.append({"id": snake_1_id, "direction": dir})
 
 
