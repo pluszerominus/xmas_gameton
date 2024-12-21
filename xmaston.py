@@ -20,21 +20,33 @@ k = 0
 
 def escape_fence(fences,direction,geometry):
     all_direction_mass=[[-1,0,0],
-                   [1,0,0],
-                   [0,-1,0],
-                   [0,1,0],
-                   [0,0,-1],
-                   [0,0,1]]
+                        [1,0,0],
+                        [0,-1,0],
+                        [0,1,0],
+                        [0,0,-1],
+                        [0,0,1]]
+    #Если змея длинее 1 то назад нельзя двигаться 
+    if range(len(geometry))>1:
+        all_direction_mass.pop(all_direction_mass.index([-x for x in direction]))
+    #Убрать все направления что привидут уходу за границу
+    for direction_mass in all_direction_mass:
+        if any(x + y < 0 for x, y in zip(geometry[0], direction_mass*2)):
+            all_direction_mass.pop(all_direction_mass.index(direction_mass))
     for fence in fences:
-        for pixel_fence in fence:
-            for i in range(len(all_direction_mass)):
-                    if all_direction_mass[i]==direction:
-                        all_direction_mass.pop(i)
-                    break
-            direction_mass=all_direction_mass
-            while [x + y for x, y in zip(geometry[0], direction)] == pixel_fence:
-                direction==direction_mass[0]
-                direction_mass.pop(0)
+        dist_pixel_fence = manhattan_distances(fence,[geometry[0]])
+        if 2 in dist_pixel_fence:            
+            #До каких точек мало растояния
+            distance_1 = [i for i, value in enumerate(dist_pixel_fence) if value == 2]            
+            #Убрать все направления сталкновений с объектами
+            for i in range(len(distance_1)):
+                if [x + y for x, y in zip(geometry[0], direction*2)] == fence[distance_1[i]]:
+                    all_direction_mass.pop(all_direction_mass.index(direction))                    
+                    direction=all_direction_mass[0]
+                    all_direction_mass.pop(0)
+            #остановку можно убрать - тогда будут учитываться все преграды, но перебор займет больше времени
+            break                    
+    #Можно возращать весь набор возможных направлений 
+    #return all_direction_mass
     return direction
 
 def find_mandarin(foods, snake_coord, special_foods=None):
