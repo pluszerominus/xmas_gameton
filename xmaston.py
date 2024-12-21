@@ -140,7 +140,7 @@ while True:
                     min_coord_list[index] = min_coord
                 dir = get_direction(min_coord_list[index], snake_1_coord[0])
                 #Обход преград и уход от краев
-                dir = escape_fence(fence_pos,snake_1_dir, snake_1_coord,dir)
+                dir = escape_fence(fence_pos,snake_1_dir, snake_1_coord,min_coord)
                 print(f"For snakes_{index}: food - {min_coord_list[index]}, snake - {snake_1_coord}, dir - {dir}")
                 snake_1_dict.append({"id": snake_1_id, "direction": dir})
 
