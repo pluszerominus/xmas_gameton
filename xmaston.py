@@ -27,7 +27,7 @@ def escape_fence(fences,direction,geometry):
                         [0,0,-1],
                         [0,0,1]]
     #Если змея длинее 1 то назад нельзя двигаться 
-    if range(len(geometry))>1:
+    if (len(geometry))>1:
         all_direction_mass.pop(all_direction_mass.index([-x for x in direction]))
     #Убрать все направления что привидут уходу за границу
     for direction_mass in all_direction_mass:
