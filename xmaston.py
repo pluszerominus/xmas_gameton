@@ -5,7 +5,6 @@ import numpy as np
 
 import json
 
-
 # Ваш токен
 token = 'a1a34c48-b881-427a-858f-56c5982d68f5'
 # URL сервера
@@ -46,10 +45,11 @@ def get_safe_dir(snake_dir, snake_coord, food, fences):
                           [0, 1, 0],
                           [0, 0, -1],
                           [0, 0, 1]]
+
     min_dist = 30_000
     dir = snake_dir
     snake_coord = np.array(snake_coord)
-    if list(np.array(snake_dir)*2 + snake_coord[0]) in fences:
+    if list(np.array(snake_dir) + snake_coord[0]) in fences or list(np.array(snake_dir)*2 + snake_coord[0]) in fences:
         for i in all_direction_mass:
             dist = manhattan_distances([food], [snake_coord[0] + i])
             if list(snake_coord[0] + i) not in fences and dist < min_dist:
@@ -88,7 +88,7 @@ def find_mandarin(foods, snake_coord, snakes_min_dist, center):
     for food in foods:
         if food["points"] > 0:
             world_center_dist = manhattan_distances([center], [food["c"]])
-            dist = manhattan_distances([food["c"]],[snake_coord])
+            dist = manhattan_distances([food["c"]], [snake_coord])
             world_center_coef = (world_half_dist - world_center_dist) / world_half_dist
             points = food["points"] / dist * world_center_coef
             if points > max_points:
@@ -98,7 +98,9 @@ def find_mandarin(foods, snake_coord, snakes_min_dist, center):
                 elif len(snakes_min_dist) == 0:
                     max_points = points
                     min_coord = food["c"]
+
     return min_coord
+
 
 def get_direction(min_coord, head_coord):
     if head_coord[0] != min_coord[0]:
@@ -117,7 +119,7 @@ def get_direction(min_coord, head_coord):
         else:
             return [0, 0, -1]
 
-n = 6
+n = 7
 
 previous_len = [0,0,0]
 min_coord_list = [0, 0, 0]
@@ -129,16 +131,20 @@ min_coord = -1
 while True:
     print(k)
     if snakes is not None and previous_turn != current_turn:
+        for enemie in enemies:
+            for val in enemie["geometry"]:
+                fence_pos.append(val)
+
         previous_turn = current_turn
         world_center = (map_size // 2)
-        for index, snake_1 in enumerate(snakes):
-            if snake_1["status"] == "alive":
-                if gold_snake_id == -1:
-                    dist = manhattan_distances([world_center], [snake_1["geometry"][0]])
-                    if dist > previous_dist:
-                        previous_dist = dist
-                        m = index
-        gold_snake_id = m
+        # for index, snake_1 in enumerate(snakes):
+        #     if snake_1["status"] == "alive":
+        #         if gold_snake_id == -1:
+        #             dist = manhattan_distances([world_center], [snake_1["geometry"][0]])
+        #             if dist > previous_dist:
+        #                 previous_dist = dist
+        #                 m = index
+        # gold_snake_id = m
 
         for index, snake_1 in enumerate(snakes):
             if snake_1["status"] == "alive":
@@ -147,12 +153,13 @@ while True:
                 snake_1_coord = snake_1["geometry"]
                 if len(snake_1_coord) != previous_len[index] or min_coord_list[index] not in food_coord:
                     previous_len[index] = len(snake_1_coord)
-                    if index != gold_snake_id:
-                        min_coord = find_mandarin(food, snake_1_coord[0],min_coord_list, world_center)
-                    else:
-                        min_coord = find_gold(snake_1_coord[0], min_coord_list, special_food)
-                        if min_coord == -1:
-                            min_coord = find_mandarin(food, snake_1_coord[0], min_coord_list, world_center)
+                    min_coord = find_mandarin(food, snake_1_coord[0], min_coord_list, world_center)
+                    # if index != gold_snake_id:
+                    #     min_coord = find_mandarin(food, snake_1_coord[0],min_coord_list, world_center)
+                    # else:
+                    #     min_coord = find_gold(snake_1_coord[0], min_coord_list, special_food)
+                    #     if min_coord == -1:
+                    #         min_coord = find_mandarin(food, snake_1_coord[0], min_coord_list, world_center)
                     min_coord_list[index] = min_coord
                 print(min_coord_list[index], snake_1_coord[0])
                 dir = get_direction(min_coord_list[index], snake_1_coord[0])
