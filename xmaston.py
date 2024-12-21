@@ -83,32 +83,22 @@ def find_gold(snake_coord, snakes_min_dist, special_foods):
     return min_coord
 
 def find_mandarin(foods, snake_coord, snakes_min_dist, center):
-    min_dist = 30_000
-    min_coord = None
-    extra_min_coord = None
-    min_extra = 30_000
+    max_points = 0
+    world_half_dist = manhattan_distances([center], [0, 0, 0])
     for food in foods:
         if food["points"] > 0:
-            dist = manhattan_distances([food["c"]],[snake_coord])
             world_center_dist = manhattan_distances([center], [food["c"]])
-            if dist < min_dist and world_center_dist <= 100:
+            dist = manhattan_distances([food["c"]],[snake_coord])
+            world_center_coef = (world_half_dist - world_center_dist) / world_half_dist
+            points = food["points"] / dist * world_center_coef
+            if points > max_points:
                 if len(snakes_min_dist) != 0 and food["c"] not in snakes_min_dist:
-                    min_dist = dist
+                    max_points = points
                     min_coord = food["c"]
                 elif len(snakes_min_dist) == 0:
-                    min_dist = dist
+                    max_points = points
                     min_coord = food["c"]
-            elif dist < min_extra:
-                if len(snakes_min_dist) != 0 and food["c"] not in snakes_min_dist:
-                    min_extra = dist
-                    extra_min_coord = food["c"]
-                elif len(snakes_min_dist) == 0:
-                    min_extra = dist
-                    extra_min_coord = food["c"]
-    if min_coord is None:
-        return extra_min_coord
-    else:
-        return min_coord
+    return min_coord
 
 def get_direction(min_coord, head_coord):
     if head_coord[0] != min_coord[0]:
