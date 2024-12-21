@@ -100,6 +100,7 @@ def get_direction(min_coord, head_coord):
             return [0, 0, -1]
 n = 4
 previous_len = [0,0,0]
+starttime = time.monotonic()
 while True:
     print(k)
     if snakes is not None:
@@ -163,4 +164,4 @@ while True:
     with open(f'example/example_{n}_{k}_response.json', 'w') as file:
         file.write(response.text)
     k += 1
-    time.sleep(0.2)
+    time.sleep(1.0 - ((time.monotonic() - starttime) % 1.0))
